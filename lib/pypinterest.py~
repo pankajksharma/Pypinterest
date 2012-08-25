@@ -421,11 +421,11 @@ class Client:
         pass
 
     """TODO Get a list of followers of a specified user"""
-    def getfollowing(self, username):
+    def getfollowers(self, username):
         pass
 
     """  WORKING ON   Get a list of users that a specified user is following"""
-    def getfollowers(self, username):
+    def getfollowing(self, username):
 	url = self.base  + r'/' + username + r'/followers/?page=11'
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
         opener.addheaders = [
