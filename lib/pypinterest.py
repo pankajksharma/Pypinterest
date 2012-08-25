@@ -420,11 +420,42 @@ class Client:
     def comment(self, pinid):
         pass
 
-    """TODO Get a list of followers of a specified user"""
+    """Get a list of followers of a specified user"""
     def getfollowing(self, username):
-        pass
+	url = self.base  + r'/' + username + r'/following'
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
+        opener.addheaders = [
+                        ("User-agent", self.useragent),
+                        ('Content-Type', 'application/x-www-form-urlencoded'),
+                        ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                        ('Referer', 'http://pinterest.com/')]
+        try:
+            req = urllib2.Request(url)
+            data = opener.open(req).read()
+        except (urllib2.URLError, urllib2.HTTPError, httplib.HTTPException), e:
+            raise pypinterestError('Error in getfollowers():'+ str(e))
+            return None
 
-    """  WORKING ON   Get a list of users that a specified user is following"""
+	temp = data.split('<div id="PeopleList">')[1].split('</body>')[0]
+
+	lst = list()
+
+	for x in temp.split(r'<div class="PersonInfo">'):
+		info = dict()
+		tempi = x.split('Following')[0]
+		tempi = tempi.split('<a')
+		try:
+			info['following'] = int(tempi[3].split('>')[1].strip())
+			pinfo = tempi[1].split('</a>')[0]
+			info['username'] = pinfo.split(r'/">')[0].replace(r'href="/','').strip()
+			info['name'] = pinfo.split(r'/">')[1].strip()
+			lst.append(info)			
+		except Exception,e:
+	#		print 'Exception:',e
+			continue
+	return lst
+
+    """Get a list of users that a specified user is following"""
     def getfollowers(self, username):
 	url = self.base  + r'/' + username + r'/followers/?page=11'
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
@@ -442,10 +473,10 @@ class Client:
 
 	temp = data.split('<div id="PeopleList">')[1].split('</body>')[0]
 
-	info = dict()
 	lst = []
 
 	for x in temp.split(r'<div class="PersonInfo">'):
+		info = dict()
 		tempi = x.split('Follower')[0]
 		tempi = tempi.split('<a')
 		try:
