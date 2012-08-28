@@ -420,6 +420,63 @@ class Client:
     def comment(self, pinid):
         pass
 
+    """WORKING ON Get information about user"""
+    def getuserinfo(self,username):
+	url = self.base  + r'/' + username + r'/'
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
+        opener.addheaders = [
+                        ("User-agent", self.useragent),
+                        ('Content-Type', 'application/x-www-form-urlencoded'),
+                        ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                        ('Referer', 'http://pinterest.com/')]
+        try:
+            req = urllib2.Request(url)
+            data = opener.open(req).read()
+        except (urllib2.URLError, urllib2.HTTPError, httplib.HTTPException), e:
+            raise pypinterestError('Error in getfollowers():'+ str(e))
+            return None
+
+	temp = data.split('<div class="info">')[1].split(r'</strong> Following')[0]+'</strong>'
+
+	info = dict()
+	
+	info['username'] = username
+	info['name'] = temp.split('<h1>')[1].split('</h1>')[0].strip()
+	try:
+		info['description'] = temp.split('<p class="colormuted">')[1].split(r'<ul id="ProfileLinks"')[0].strip()
+	except:
+		info['description'] = ''
+		print 'desc not given'
+	info['profile_pic_url'] = temp.split(r'<a href="')[1].split(r'" class="ProfileImage"')[0].strip()
+
+	temp = temp.split(r'<ul id="ProfileLinks" class="icons">')[1]
+	try:
+		info['fb_link'] = r'http://facebook.com/'+temp.split(r'<a href="http://facebook.com/')[1].split(r'" class="icon facebook"')[0].strip()
+	except:
+		info['fb_link']=''
+		print 'website not given'
+	try:
+		info['twitter_handle'] = r'http://twitter.com'+temp.split(r'<a href="http://twitter.com')[1].split(r'" class="icon twitter"')[0].strip()
+	except:
+		info['twitter_handle'] = ''
+		print 'Twitter handle not given'
+	try:
+		info['location'] = temp.split('</span>')[1].split('</li>')[0].strip()
+	except:
+		info['location'] = 'Not Specified'
+		print 'location not given'
+
+	temp = temp.split(r'<div id="ContextBar')[1]
+	temp2 = temp.split('<strong>')
+	
+	info['boards'] = temp2[1].split(r'</strong>')[0].strip()
+	info['pins'] = temp2[2].split(r'</strong>')[0].strip()
+	info['likes'] = temp2[3].split(r'</strong>')[0].strip()
+	info['followers'] = temp2[4].split(r'</strong>')[0].strip()
+	info['following'] = temp2[5].split(r'</strong>')[0].strip()
+	return info
+
+
     """Get a list of followers of a specified user"""
     def getfollowing(self, username):
 	url = self.base  + r'/' + username + r'/following'
